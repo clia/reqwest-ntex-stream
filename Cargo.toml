@@ -1,0 +1,15 @@
+[package]
+name = "reqwest-ntex-stream"
+version = "1.0.0"
+authors = ["clia <clia@163.com>"]
+edition = "2018"
+
+[lib]
+name = "reqwest_ntex_stream"
+crate-type = ["rlib"]
+
+[dependencies]
+ntex = "0"
+futures = "0.3"
+reqwest = "0"
+bytes = "1"
