@@ -7,7 +7,7 @@ use std::task::{Context, Poll};
 use futures::Stream;
 use ntex::http::error::PayloadError;
 
-/// 把Actix-web 的 Payload 强行改成可发送的
+/// 把 ntex 的 Payload 强行改成可发送的
 /// 这样才能支持reqwest的流分发方式
 /// 
 /// 注意：此物最好不要跨线程使用，否则就真的不安全了
@@ -16,10 +16,10 @@ use ntex::http::error::PayloadError;
 ///
 /// ```rust
 /// async fn handle(
-///     body: actix_web::web::Payload,
+///     body: ntex::web::types::Payload,
 /// ) {
 ///     let mut builder = client.get(url);
-///     builder = builder.body(reqwest::Body::wrap_stream(reqwest_actix_stream::PayloadStream {
+///     builder = builder.body(reqwest::Body::wrap_stream(reqwest_ntex_stream::PayloadStream {
 ///         payload: body,
 ///     }));
 ///     builder.send().await;
@@ -41,7 +41,7 @@ impl Stream for PayloadStream {
         cx: &mut Context<'_>,
     ) -> Poll<Option<Self::Item>> {
 
-        // 由于Actix-web 的 PayloadError 只在体系内，这里需要转换一下才能传给reqwest
+        // 由于 ntex 的 PayloadError 只在体系内，这里需要转换一下才能传给reqwest
         match Pin::new(&mut self.payload).poll_next(cx) {
             Poll::Pending => Poll::Pending,
             Poll::Ready(Some(Ok(res))) => Poll::Ready(Some(Ok(res))),
@@ -71,7 +71,7 @@ impl Stream for PayloadStream {
 /// let stream = res.bytes_stream();
 /// let mut resp = HttpResponse::build(res.status());
 /// // 这种方式默认会使用 chunked 传输方式
-/// return Ok(resp.streaming(reqwest_actix_stream::ResponseStream{ stream: stream }));
+/// return Ok(resp.streaming(reqwest_ntex_stream::ResponseStream{ stream: stream }));
 /// ```
 pub struct ResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes>> + Unpin {
     // stream: Box<dyn Stream<Item = reqwest::Result<web::Bytes>>>,
@@ -88,7 +88,7 @@ impl<T> Stream for ResponseStream<T> where T: Stream<Item = reqwest::Result<byte
         cx: &mut Context<'_>,
     ) -> Poll<Option<Self::Item>> {
 
-        // 由于Actix-web 和 reqwest 的错误体系不互通，这里需要转换一下
+        // 由于 ntex 和 reqwest 的错误体系不互通，这里需要转换一下
         // match Pin::new(&mut self.stream).poll_next(cx) {
         // match Pin::new(Box::leak(self.stream)).poll_next(cx) {
         // let s = Pin::new(&mut self.stream);
