@@ -107,3 +107,49 @@ impl<T> Stream for ResponseStream<T> where T: Stream<Item = reqwest::Result<byte
         }
     }
 }
+
+/// 把 reqwest 的流也封装一下，转换需要的错误类型
+/// 
+/// ## Example
+///
+/// ```rust
+/// let res = builder.send().await;
+/// let stream = res.bytes_stream();
+/// let mut resp = HttpResponse::build(res.status());
+/// // 这种方式默认会使用 chunked 传输方式
+/// return Ok(resp.streaming(reqwest_ntex_stream::ResponseStream{ stream: stream }));
+/// ```
+pub struct SizedResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes>> + Unpin {
+    // stream: Box<dyn Stream<Item = reqwest::Result<web::Bytes>>>,
+    // stream: Box<dyn Stream<Item = reqwest::Result<web::Bytes>>>,
+    pub stream: T,
+}
+
+impl<T> Stream for SizedResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes>> + Unpin {
+    type Item = Result<bytes::Bytes, Box<dyn std::error::Error>>;
+
+    #[inline]
+    fn poll_next(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Option<Self::Item>> {
+
+        // 由于 ntex 和 reqwest 的错误体系不互通，这里需要转换一下
+        // match Pin::new(&mut self.stream).poll_next(cx) {
+        // match Pin::new(Box::leak(self.stream)).poll_next(cx) {
+        // let s = Pin::new(&mut self.stream);
+        // let s2 = unsafe { Box::from_raw(Box::into_raw(self.stream)) };
+        // match <Pin<Box<_>>>::from(self.stream).as_mut().poll_next(cx) {
+        // match s.as_mut().poll_next(cx) {
+        // match Pin::new(&mut Box::new(&mut self.stream)).poll_next(cx) {
+        // match Pin::new((&mut self.stream).as_mut()).poll_next(cx) {
+        // match self.stream.poll_next(cx) {
+        // match Box::pin(Box::new(self.stream)).as_mut().poll_next(cx) {
+        match Pin::new(&mut self.stream).poll_next(cx) {
+            Poll::Pending => Poll::Pending,
+            Poll::Ready(Some(Ok(res))) => Poll::Ready(Some(Ok(res))),
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(io::Error::new(io::ErrorKind::Other, format!("{:?}", e)).into()))),
+            Poll::Ready(None) => Poll::Ready(None),
+        }
+    }
+}
