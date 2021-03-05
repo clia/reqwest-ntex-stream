@@ -80,7 +80,7 @@ pub struct ResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes
 }
 
 impl<T> Stream for ResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes>> + Unpin {
-    type Item = Result<bytes::Bytes, Box<dyn std::error::Error>>;
+    type Item = Result<bytes::Bytes, io::Error>;
 
     #[inline]
     fn poll_next(
