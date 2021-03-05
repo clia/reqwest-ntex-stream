@@ -73,13 +73,13 @@ impl Stream for PayloadStream {
 /// // 这种方式默认会使用 chunked 传输方式
 /// return Ok(resp.streaming(reqwest_ntex_stream::ResponseStream{ stream: stream }));
 /// ```
-pub struct ResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes>> + Unpin {
+pub struct ResponseStream<T> where T: Stream<Item = Result<bytes::Bytes, Box<dyn std::error::Error>>> + Unpin {
     // stream: Box<dyn Stream<Item = reqwest::Result<web::Bytes>>>,
     // stream: Box<dyn Stream<Item = reqwest::Result<web::Bytes>>>,
     pub stream: T,
 }
 
-impl<T> Stream for ResponseStream<T> where T: Stream<Item = reqwest::Result<bytes::Bytes>> + Unpin {
+impl<T> Stream for ResponseStream<T> where T: Stream<Item = Result<bytes::Bytes, Box<dyn std::error::Error>>> + Unpin {
     type Item = Result<bytes::Bytes, Box<dyn std::error::Error>>;
 
     #[inline]
