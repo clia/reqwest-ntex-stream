@@ -1,11 +1,15 @@
 [package]
-name = "reqwest-ntex-stream"
+name = "clia-reqwest-ntex-stream"
 version = "1.0.0"
 authors = ["clia <clia@163.com>"]
-edition = "2018"
+edition = "2021"
+license = "BSD-2-Clause"
+description = "A Stream to link between Reqwest and ntex two systems."
+repository = "https://github.com/clia/reqwest-ntex-stream"
+keywords = ["reqwest", "ntex", "stream", "adaptor"]
 
 [lib]
-name = "reqwest_ntex_stream"
+name = "clia_reqwest_ntex_stream"
 crate-type = ["rlib"]
 
 [dependencies]
