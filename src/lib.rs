@@ -33,7 +33,7 @@ unsafe impl Send for PayloadStream {}
 unsafe impl Sync for PayloadStream {}
 
 impl Stream for PayloadStream {
-    type Item = Result<bytes::Bytes, io::Error>;
+    type Item = Result<ntex::util::Bytes, io::Error>;
 
     #[inline]
     fn poll_next(
