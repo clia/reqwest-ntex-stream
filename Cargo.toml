@@ -1,6 +1,6 @@
 [package]
 name = "clia-reqwest-ntex-stream"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["clia <clia@163.com>"]
 edition = "2021"
 license = "BSD-2-Clause"

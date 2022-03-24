@@ -1,4 +1,5 @@
 use std::io;
+// use std::mem;
 
 use ntex::web;
 
@@ -33,7 +34,7 @@ unsafe impl Send for PayloadStream {}
 unsafe impl Sync for PayloadStream {}
 
 impl Stream for PayloadStream {
-    type Item = Result<ntex::util::Bytes, io::Error>;
+    type Item = Result<bytes::Bytes, io::Error>;
 
     #[inline]
     fn poll_next(
@@ -44,7 +45,11 @@ impl Stream for PayloadStream {
         // 由于 ntex 的 PayloadError 只在体系内，这里需要转换一下才能传给reqwest
         match Pin::new(&mut self.payload).poll_next(cx) {
             Poll::Pending => Poll::Pending,
-            Poll::Ready(Some(Ok(res))) => Poll::Ready(Some(Ok(res))),
+            Poll::Ready(Some(Ok(res))) => Poll::Ready(Some(Ok(bytes::Bytes::copy_from_slice(res.as_ref())))),
+            // {
+            //     let bytes = unsafe { mem::transmute::<ntex::util::Bytes, bytes::Bytes>(res) };
+            //     Poll::Ready(Some(Ok(bytes)))
+            // }
             Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(match e {
                 PayloadError::Incomplete(o) => match o {
                     Some(e) => e,
